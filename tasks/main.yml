@@ -1,0 +1,74 @@
+---
+- name: Check if the partition is already mounted
+  shell: df | grep "{{item.partition}}" | wc -l
+  with_items: "{{ebs_vol}}"
+  register: ebs_checked
+  when: ebs_vol is defined
+
+- name: Make filesystem of the partition
+  filesystem: fstype=ext4 dev={{item.item.partition}}
+  with_items: "{{ ebs_checked.results }}"
+  when: ebs_checked && "{{item.stdout}} == 0"
+
+- name: Mount the partition
+  mount: path={{item.mountpoint}} src={{item.partition}} state=present
+  with_items: "{{ebs_vol}}"
+  when: ebs_checked
+
+- name: setup group
+  group: name=zookeeper system=yes
+
+- name: Setup user
+  user: name=zookeeper system=yes group=zookeeper
+
+- name: Fetch zookeeper binary package
+  get_url: dest="/tmp" url={{ zookeeper_url }}""
+
+- name: Uncompress the zookeeper tar
+  unarchive: copy=no creates={{zookeeper_dir}} dest=/opt src="/tmp/{{ zookeeper_version }}.tar.gz"
+
+- name: Rename the zookeeper folder 
+  command: mv /opt/{{ zookeeper_version }} /opt/zookeeper
+  ignore_errors: yes
+
+- name: change ownership on zookeeper directory
+  file: path={{ zookeeper_dir }} state=directory owner=zookeeper group=zookeeper recurse=yes
+
+- name: create zookeeper data folder
+  file: path={{ zookeeper_data_dir }} state=directory recurse=yes owner=zookeeper group=zookeeper
+
+- name: create zookeeper logs folder
+  file: path={{ zookeeper_log_dir }} state=directory recurse=yes owner=zookeeper group=zookeeper 
+
+- name: Update start script
+  replace: dest=/opt/zookeeper/bin/zkServer.sh regexp='\$\{BASH_SOURCE-\$0\}' replace='`readlink $0`'
+
+- name: add start script
+  file: src=/opt/zookeeper/bin/zkServer.sh dest=/etc/init.d/zookeeper state=link
+
+- name: setup myid
+  template: src=myid.j2 dest={{ zookeeper_data_dir }}/myid owner=zookeeper group=zookeeper
+  tags: [zookeeper_config]
+
+- name: config zookeeper
+  template: src={{ item }}.j2 dest={{ zookeeper_dir }}/conf/{{ item }} owner=zookeeper group=zookeeper
+  with_items:
+    - zoo.cfg
+    - log4j.properties
+    - zookeeper-env.sh
+  tags: [zookeeper_config]
+
+- name: Start the zookeeper
+  service: name=zookeeper state=started enabled=yes
+  tags: [zookeeper_config]
+
+#- name: Rolling restart zookeeper
+#  service: name=zookeeper state=restarted enabled=yes
+#  tags: [zookeeper_restart,zookeeper_config]
+#  with_items: "[{% for host in groups[zookeeper_group]  %}'{{ host }}'{% if not loop.last %} ,{% endif %}{% endfor %}]"
+#  delegate_to: "{{ item }}"
+#  when: rolling_restart is defined
+###################################################################################################################################################################
+#Rolling restart has been commented out because at the initial level it will try to restart the whole cluster and as the cluster is not ready so it will break down.
+#You can enable it by removing comments and defining run-time variable 
+###################################################################################################################################################################

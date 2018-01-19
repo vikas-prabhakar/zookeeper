@@ -1,0 +1,13 @@
+---
+zookeeper_log_level: WARN
+zookeeper_maxClientCnxns: 60
+zookeeper_client_port: 2181
+zookeeper_version: zookeeper-3.4.11
+zookeeper_url: http://www-us.apache.org/dist/zookeeper/{{zookeeper_version}}.tar.gz
+zookeeper_tick_time: 2000
+zookeeper_dir: /opt/zookeeper
+zookeeper_data_dir: /mnt/zookeeper
+zookeeper_log_dir: /var/log/zookeeper
+zookeeper_init_limit: 5
+zookeeper_sync_limit: 2
+

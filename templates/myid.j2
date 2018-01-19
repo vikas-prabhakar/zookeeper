@@ -1,0 +1,5 @@
+{% for server in groups[zookeeper_group] %}
+{% if server == ansible_default_ipv4.address %}
+{{ loop.index }}
+{% endif %}
+{% endfor %}
