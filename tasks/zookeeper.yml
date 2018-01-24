@@ -42,8 +42,21 @@
     - zookeeper-env.sh
   tags: [zookeeper_config]
 
-- name: Rolling restart zookeeper
+- name: Start zookeeper
   service: name=zookeeper state=started enabled=yes
-  tags: [zookeeper_restart,zookeeper_config]
-  with_items: "[{% for host in groups[zookeeper_group]  %}'{{ host }}'{% if not loop.last %} ,{% endif %}{% endfor %}]"
-  delegate_to: "{{ item }}"
+  tags: [zookeeper_config]
+
+#- name: Rolling restart zookeeper
+#  service: name=zookeeper state=restarted enabled=yes
+#  tags: [zookeeper_restart,zookeeper_config]
+#  with_items: "[{% for host in groups[zookeeper_group]  %}'{{ host }}'{% if not loop.last %} ,{% en
+dif %}{% endfor %}]"
+#  delegate_to: "{{ item }}"
+#  when: rolling_restart is defined
+####################################################################################################
+###############################################################
+#Rolling restart has been commented out because at the initial level it will try to restart the whol
+e cluster and as the cluster is not ready so it will break down.
+#You can enable it by removing comments and defining run-time variable
+####################################################################################################
+###############################################################
