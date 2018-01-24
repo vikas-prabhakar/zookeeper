@@ -1,0 +1,16 @@
+---
+- name: Check if drives are already mounted
+  shell: df | grep "{{item.partition}}" | wc -l
+  with_items:
+    - "{{ebs_vol}}"
+  register: ebs_checked
+
+- name: Make filesystem
+  filesystem: fstype=ext4 dev="{{item.item.partition}}" force=no
+  when: "{{item.stdout}} == 0"
+  with_items: ebs_checked.results
+
+- name: Mount the partition
+  mount: src="{{item.item.partition}}" dest="{{item.item.mountpoint}}"
+  when: "{{item.stdout}} == 0"
+  with_items: ebs_checked.results
