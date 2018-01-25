@@ -7,9 +7,9 @@ zookeeper_group is variable which will look for hosts from dynamic inventory.
 
 	If you want to mount an additional partition for zookeeper then define ebs_vol and update the variable zookeeper_data_dir accordingly
 	e.g
-		ebs_vol:
-	- partition: /dev/sdb
-      mountpoint:/mnt
+		zkebs_vol:
+	          - partition: /dev/sdb
+                    mountpoint:/mnt
 
 	We have created a soft link to start/stop script along one update ${BASH_SOURCE-$0} with readlink $0
 
