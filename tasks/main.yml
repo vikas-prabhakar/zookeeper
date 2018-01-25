@@ -1,6 +1,6 @@
 ---
-- include: ebs.yml tags= ebs_vol
-  when: ebs_vol is defined
+- include: zkebs.yml tags=additional_ebs
+  when: zkebs_vol is defined
 
 - include: zookeeper.yml tags=zookeeper
 
